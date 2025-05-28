@@ -1,8 +1,8 @@
 import axios from "axios";
-// https://decisionhub-t40p.onrender.com/api/
+// https://nocodelogic-server.onrender.com/api/
 // http://localhost:8080/api/
 const API = axios.create({
-  baseURL: "http://localhost:8080/api/",
+  baseURL: "https://nocodelogic-server.onrender.com/api/",
 });
 
 //Auth

@@ -25,6 +25,7 @@ A Rule Builder application “No Code Logic” that empowers Business Analysts t
 | ![Image1](./assets/rule1.png) |
 | ![Image2](./assets/rule2.png) |
 | ![Image3](./assets/rule3.png)  |
+| ![Image3](./assets/rule4.png)  |
 | ![Image4](./assets/testrule1.png) |
 | ![Image5](./assets/testrule2.png)  |
 

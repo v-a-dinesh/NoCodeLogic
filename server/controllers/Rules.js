@@ -700,7 +700,7 @@ export const createRuleWithText = async (req, res, next) => {
     const prompt = createRuleRequest(textConditions, JSON.stringify(ruleDataForPrompt));
 
     // Make Gemini API call correctly
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
     // IMPORTANT: This is the fixed part - "text" needs to be "parts" with a "text" property
     // Generate content with proper configuration

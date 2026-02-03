@@ -9,7 +9,53 @@ import xlsx from "xlsx";
 import path from "path";
 dotenv.config();
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Primary and fallback API keys from environment
+const PRIMARY_API_KEY = process.env.GEMINI_API_KEY;
+const FALLBACK_API_KEY = process.env.GEMINI_API_KEY_FALLBACK;
+
+// Initialize GenAI instances for both keys
+const primaryGenAI = new GoogleGenerativeAI(PRIMARY_API_KEY);
+const fallbackGenAI = FALLBACK_API_KEY ? new GoogleGenerativeAI(FALLBACK_API_KEY) : null;
+
+// Model configurations in order of preference
+const MODEL_CONFIGS = [
+  { genAI: primaryGenAI, model: "gemini-2.5-flash-lite", name: "Primary Key + Flash-Lite" },
+  { genAI: primaryGenAI, model: "gemini-2.5-flash", name: "Primary Key + Flash" },
+  { genAI: fallbackGenAI, model: "gemini-2.5-flash-lite", name: "Fallback Key + Flash-Lite" },
+  { genAI: fallbackGenAI, model: "gemini-2.5-flash", name: "Fallback Key + Flash" },
+];
+
+// Helper function to call Gemini with fallback support
+async function callGeminiWithFallback(prompt, generationConfig) {
+  let lastError = null;
+  
+  for (const config of MODEL_CONFIGS) {
+    if (!config.genAI) continue; // Skip if fallback key not configured
+    
+    try {
+      console.log(`Trying: ${config.name}...`);
+      const model = config.genAI.getGenerativeModel({ model: config.model });
+      const result = await model.generateContent({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig,
+      });
+      
+      if (result && result.response) {
+        console.log(`Success with: ${config.name}`);
+        return result;
+      }
+    } catch (error) {
+      console.error(`Failed with ${config.name}:`, error.message);
+      lastError = error;
+      // Continue to next fallback
+    }
+  }
+  
+  throw lastError || new Error("All Gemini API configurations failed");
+}
+
+// Keep legacy reference for backward compatibility (uses primary key)
+const genAI = primaryGenAI;
 
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: "postgres",
@@ -699,20 +745,10 @@ export const createRuleWithText = async (req, res, next) => {
     // Create the prompt using your existing function
     const prompt = createRuleRequest(textConditions, JSON.stringify(ruleDataForPrompt));
 
-    // Make Gemini API call correctly
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    
-    // IMPORTANT: This is the fixed part - "text" needs to be "parts" with a "text" property
-    // Generate content with proper configuration
-    const geminiResult = await model.generateContent({
-      contents: [{ 
-        role: "user",
-        parts: [{ text: prompt }]
-      }],
-      generationConfig: {
-        temperature: 0.1,
-        maxOutputTokens: 8192,
-      }
+    // Make Gemini API call with fallback support
+    const geminiResult = await callGeminiWithFallback(prompt, {
+      temperature: 0.1,
+      maxOutputTokens: 8192,
     });
     
     // Check for successful response

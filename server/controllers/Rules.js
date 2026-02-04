@@ -18,11 +18,12 @@ const primaryGenAI = new GoogleGenerativeAI(PRIMARY_API_KEY);
 const fallbackGenAI = FALLBACK_API_KEY ? new GoogleGenerativeAI(FALLBACK_API_KEY) : null;
 
 // Model configurations in order of preference
+// Prioritize more capable Flash model over Flash-Lite for better quality
 const MODEL_CONFIGS = [
-  { genAI: primaryGenAI, model: "gemini-2.5-flash-lite", name: "Primary Key + Flash-Lite" },
   { genAI: primaryGenAI, model: "gemini-2.5-flash", name: "Primary Key + Flash" },
-  { genAI: fallbackGenAI, model: "gemini-2.5-flash-lite", name: "Fallback Key + Flash-Lite" },
+  { genAI: primaryGenAI, model: "gemini-2.5-flash-lite", name: "Primary Key + Flash-Lite" },
   { genAI: fallbackGenAI, model: "gemini-2.5-flash", name: "Fallback Key + Flash" },
+  { genAI: fallbackGenAI, model: "gemini-2.5-flash-lite", name: "Fallback Key + Flash-Lite" },
 ];
 
 // Helper function to call Gemini with fallback support
